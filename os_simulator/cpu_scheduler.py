@@ -16,74 +16,151 @@ class CPUSchedulingStrategy(ABC):
 
 class FCFSStrategy(CPUSchedulingStrategy):
     def schedule(self, processes: List[Process], quantum: int = None):
-        # Ordenar por llegada
+        # Implementación basada en el código proporcionado por el usuario
+        # t_0 -> arrival_time
+        # t -> burst_time
+        
+        # Ordenar por llegada (t_0)
+        # Nota: El código original del usuario asume que ya vienen o se procesan en orden de llegada si hay empate
+        # Aquí aseguramos el ordenamiento inicial
         sorted_procs = sorted(processes, key=lambda p: p.arrival_time)
-        current_time = 0
+        
+        t_0 = [p.arrival_time for p in sorted_procs]
+        t = [p.burst_time for p in sorted_procs]
+        pids = [p.pid for p in sorted_procs]
+        
+        reloj = 0
+        candidato = 0
+        pocicion = 0
+        r = [] # Lista de índices procesados
+        
         timeline = []
-        wait_times = {}
-        turnaround_times = {}
+        t_i = {} # Tiempo inicio real
+        t_f = {} # Tiempo final
+        
+        # Lógica adaptada del usuario:
+        # while len(r)< len(t_0):
+        #     t_aux=reloj
+        #     while pocicion <len(t_0):
+        #         if pocicion not in r and t_0[pocicion]<=reloj:
+        #             minimo= t_0[pocicion]
+        #             candidato = pocicion
+        #             for i in range(pocicion,len(t_0)):
+        #                 if t_0[i]<= reloj and t_0[i]< minimo and i not in r:
+        #                     minimo= t_0[i]
+        #                     candidato = i
+        #             ...
+        
+        # Simplificación: Como ya ordenamos por arrival_time, FCFS es simplemente iterar en orden
+        # Pero mantendremos la lógica de "reloj" para ser fieles al comportamiento de simulación
+        
+        processed_count = 0
+        n = len(sorted_procs)
+        
+        while processed_count < n:
+            # Buscar candidato disponible (llegó antes o igual al reloj)
+            # En FCFS puro ordenado, siempre es el siguiente en la lista que cumpla la condición
+            
+            # Filtrar candidatos que ya llegaron y no han sido procesados
+            candidates_idx = [i for i in range(n) if i not in r and t_0[i] <= reloj]
+            
+            if not candidates_idx:
+                # Si no hay nadie, avanzar reloj
+                reloj += 1
+                continue
+            
+            # De los candidatos, el que tenga menor tiempo de llegada (FCFS)
+            # Como ya ordenamos sorted_procs por arrival_time, el primero de la lista candidates_idx es el correcto
+            # Sin embargo, para ser robustos con el código original que busca el mínimo:
+            best_idx = candidates_idx[0]
+            min_arrival = t_0[best_idx]
+            
+            for idx in candidates_idx:
+                if t_0[idx] < min_arrival:
+                    min_arrival = t_0[idx]
+                    best_idx = idx
+            
+            # Procesar
+            start_time = reloj
+            burst = t[best_idx]
+            end_time = start_time + burst
+            
+            timeline.append({'pid': pids[best_idx], 'start': start_time, 'end': end_time})
+            
+            t_f[pids[best_idx]] = end_time
+            reloj = end_time
+            r.append(best_idx)
+            processed_count += 1
+            
+        # Calcular métricas finales
+        total_wait = 0
+        total_turnaround = 0
         
         for p in sorted_procs:
-            if current_time < p.arrival_time:
-                current_time = p.arrival_time
+            end_t = t_f[p.pid]
+            turnaround = end_t - p.arrival_time
+            wait = turnaround - p.burst_time
+            total_wait += wait
+            total_turnaround += turnaround
             
-            start_time = current_time
-            end_time = start_time + p.burst_time
-            
-            timeline.append({'pid': p.pid, 'start': start_time, 'end': end_time})
-            
-            turnaround_times[p.pid] = end_time - p.arrival_time
-            wait_times[p.pid] = turnaround_times[p.pid] - p.burst_time
-            
-            current_time = end_time
-            
-        avg_wait = sum(wait_times.values()) / len(processes)
-        avg_turnaround = sum(turnaround_times.values()) / len(processes)
+        avg_wait = total_wait / n
+        avg_turnaround = total_turnaround / n
         
         return timeline, avg_wait, avg_turnaround
 
 class SJFStrategy(CPUSchedulingStrategy):
     def schedule(self, processes: List[Process], quantum: int = None):
-        # SJF No Expropiativo
-        # Necesitamos simular el paso del tiempo y ver quién está disponible
-        pending = sorted(processes, key=lambda p: p.arrival_time)
-        ready_queue = []
-        completed = []
-        current_time = 0
-        timeline = []
+        # Implementación basada en el código SJN() del usuario
+        # SJN (Shortest Job Next) es equivalente a SJF
         
-        # Si el primer proceso no llega en 0, avanzamos el tiempo
-        if pending and pending[0].arrival_time > current_time:
-            current_time = pending[0].arrival_time
-
-        while pending or ready_queue:
-            # Mover procesos que han llegado a la cola de listos
-            while pending and pending[0].arrival_time <= current_time:
-                ready_queue.append(pending.pop(0))
+        sorted_procs = sorted(processes, key=lambda p: p.arrival_time)
+        t_0 = [p.arrival_time for p in sorted_procs]
+        t = [p.burst_time for p in sorted_procs]
+        pids = [p.pid for p in sorted_procs]
+        
+        reloj = 0
+        r = [] # Índices procesados
+        timeline = []
+        t_f = {}
+        
+        n = len(sorted_procs)
+        
+        while len(r) < n:
+            candidatos = []
+            for i in range(n):
+                if i not in r:
+                    if t_0[i] <= reloj:
+                        candidatos.append(i)
             
-            if not ready_queue:
-                # Si no hay nadie listo, avanzamos al siguiente que llega
-                if pending:
-                    current_time = pending[0].arrival_time
-                continue
+            if candidatos:
+                # candidato = min(candidatos,key=lambda x:t[x])
+                candidato_idx = min(candidatos, key=lambda x: t[x])
+                
+                start_time = reloj
+                burst = t[candidato_idx]
+                end_time = start_time + burst
+                
+                timeline.append({'pid': pids[candidato_idx], 'start': start_time, 'end': end_time})
+                
+                t_f[pids[candidato_idx]] = end_time
+                reloj = end_time
+                r.append(candidato_idx)
+            else:
+                reloj += 1
+                
+        # Métricas
+        total_wait = 0
+        total_turnaround = 0
+        
+        for p in sorted_procs:
+            end_t = t_f[p.pid]
+            turnaround = end_t - p.arrival_time
+            wait = turnaround - p.burst_time
+            total_wait += wait
+            total_turnaround += turnaround
             
-            # Seleccionar el de menor ráfaga (Burst Time)
-            ready_queue.sort(key=lambda p: p.burst_time)
-            process = ready_queue.pop(0)
-            
-            start_time = current_time
-            end_time = start_time + process.burst_time
-            timeline.append({'pid': process.pid, 'start': start_time, 'end': end_time})
-            
-            # Calcular métricas
-            turnaround = end_time - process.arrival_time
-            wait = turnaround - process.burst_time
-            completed.append({'pid': process.pid, 'wait': wait, 'turnaround': turnaround})
-            
-            current_time = end_time
-            
-        avg_wait = sum(c['wait'] for c in completed) / len(processes)
-        avg_turnaround = sum(c['turnaround'] for c in completed) / len(processes)
+        avg_wait = total_wait / n
+        avg_turnaround = total_turnaround / n
         
         return timeline, avg_wait, avg_turnaround
 
@@ -151,6 +228,62 @@ class RoundRobinStrategy(CPUSchedulingStrategy):
             
         avg_wait = total_wait / len(processes)
         avg_turnaround = total_turnaround / len(processes)
+        
+        return timeline, avg_wait, avg_turnaround
+
+class PriorityStrategy(CPUSchedulingStrategy):
+    def schedule(self, processes: List[Process], quantum: int = None):
+        # Implementación basada en el código PR() del usuario
+        
+        sorted_procs = sorted(processes, key=lambda p: p.arrival_time)
+        t_0 = [p.arrival_time for p in sorted_procs]
+        t = [p.burst_time for p in sorted_procs]
+        prioridad = [p.priority for p in sorted_procs]
+        pids = [p.pid for p in sorted_procs]
+        
+        reloj = 0
+        r = [] # Índices procesados
+        timeline = []
+        t_f = {}
+        
+        n = len(sorted_procs)
+        
+        while len(r) < n:
+            candidatos = []
+            for i in range(n):
+                if i not in r:
+                    if t_0[i] <= reloj:
+                        candidatos.append(i)
+            
+            if candidatos:
+                # candidato = min(candidatos, key=lambda x: prioridad[x])
+                candidato_idx = min(candidatos, key=lambda x: prioridad[x])
+                
+                start_time = reloj
+                burst = t[candidato_idx]
+                end_time = start_time + burst
+                
+                timeline.append({'pid': pids[candidato_idx], 'start': start_time, 'end': end_time})
+                
+                t_f[pids[candidato_idx]] = end_time
+                reloj = end_time
+                r.append(candidato_idx)
+            else:
+                reloj += 1
+                
+        # Métricas
+        total_wait = 0
+        total_turnaround = 0
+        
+        for p in sorted_procs:
+            end_t = t_f[p.pid]
+            turnaround = end_t - p.arrival_time
+            wait = turnaround - p.burst_time
+            total_wait += wait
+            total_turnaround += turnaround
+            
+        avg_wait = total_wait / n
+        avg_turnaround = total_turnaround / n
         
         return timeline, avg_wait, avg_turnaround
 

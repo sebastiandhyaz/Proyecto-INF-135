@@ -8,32 +8,46 @@ def generate_data(num_processes=1000, filename="process_data.json", seed=None):
     
     processes = []
     
-    # Configuración de la simulación
-    MAX_ARRIVAL_TIME = 5000
+    # Configuración de la simulación basada en el código del usuario
+    # rango_llegada = (0, 100) -> Escalado para 1000 procesos
+    # rango_servicio = (1, 20)
+    # prioti = (1, 10)
+    # procesos (tamaño) = (10, 90)
+    
+    MAX_ARRIVAL_TIME = num_processes * 5 # Escalamos el tiempo de llegada para que no lleguen todos juntos
     MAX_BURST_TIME = 20
-    MAX_PAGES = 20 # Páginas numeradas del 0 al 19
-    REF_STRING_LENGTH = 15 # Longitud de la cadena de referencia de memoria
-    DISK_CYLINDERS = 200 # 0-199
+    MAX_PRIORITY = 10
+    
+    # Configuración de Memoria y Disco (Mantenemos lógica robusta)
+    MAX_PAGES = 20 
+    REF_STRING_LENGTH = 15 
+    DISK_CYLINDERS = 200 
     DISK_REQUESTS_COUNT = 5
 
     for i in range(num_processes):
-        # Generación de datos aleatorios pero realistas
         pid = i + 1
+        
+        # Generación basada en los rangos del usuario
         arrival_time = random.randint(0, MAX_ARRIVAL_TIME)
         burst_time = random.randint(1, MAX_BURST_TIME)
-        priority = random.randint(1, 5) # 1 es mayor prioridad (opcional para futuros usos)
+        priority = random.randint(1, MAX_PRIORITY)
         
-        # Principio de localidad temporal/espacial simulado (simple)
-        # Generamos referencias a páginas
+        # Tamaño del proceso en memoria (Simulado para Mejor Ajuste)
+        process_size = random.randint(10, 90)
+        
+        # Referencias a páginas (Para algoritmos de paginación)
         memory_refs = [random.randint(0, MAX_PAGES) for _ in range(REF_STRING_LENGTH)]
         
         # Peticiones a disco
         disk_requests = [random.randint(0, DISK_CYLINDERS - 1) for _ in range(DISK_REQUESTS_COUNT)]
 
-        proc = Process(pid, arrival_time, burst_time, priority, memory_refs, disk_requests)
-        processes.append(proc.to_dict())
+        # Creamos el objeto Process.
+        proc = Process(pid, arrival_time, burst_time, priority, memory_refs, disk_requests, process_size)
+        proc_dict = proc.to_dict()
+        
+        processes.append(proc_dict)
 
-    # Ordenar por tiempo de llegada para simular la realidad
+    # Ordenar por tiempo de llegada
     processes.sort(key=lambda x: x['arrival_time'])
 
     with open(filename, 'w') as f:

@@ -1,9 +1,9 @@
 import json
 from typing import List, Dict
 from models import Process
-from cpu_scheduler import CPUScheduler, FCFSStrategy, SJFStrategy, RoundRobinStrategy
-from memory_manager import MemoryManager, FIFOStrategy, LRUStrategy, OptimalStrategy
-from disk_controller import DiskController, FCFSDiskStrategy, SSTFStrategy, SCANStrategy
+from cpu_scheduler import CPUScheduler, FCFSStrategy, SJFStrategy, RoundRobinStrategy, PriorityStrategy
+from memory_manager import MemoryManager, FIFOStrategy, LRUStrategy, OptimalStrategy, BestFitStrategy, WorstFitStrategy, FirstFitStrategy, RelocatablePartitionStrategy
+from disk_controller import DiskController, DiskStrategy, FCFSDiskStrategy, SSTFStrategy, SCANStrategy
 
 class SimulationEngine:
     def __init__(self):
@@ -24,6 +24,8 @@ class SimulationEngine:
             self.cpu_scheduler.set_strategy(SJFStrategy())
         elif algorithm == "Round Robin":
             self.cpu_scheduler.set_strategy(RoundRobinStrategy())
+        elif algorithm == "Prioridad":
+            self.cpu_scheduler.set_strategy(PriorityStrategy())
             
         return self.cpu_scheduler.run(self.processes, quantum)
 
@@ -32,8 +34,13 @@ class SimulationEngine:
         # O podríamos simular por proceso. El prompt dice "Secuencia de referencias... generada por los 1000 procesos"
         # Asumiremos una gran cadena global de referencias para simplificar la visualización del algoritmo
         all_refs = []
+        process_sizes = []
+        
         for p in self.processes:
             all_refs.extend(p.memory_refs)
+            # Usar getattr para evitar errores si los objetos Process en memoria son antiguos
+            # y no tienen el atributo 'size' todavía.
+            process_sizes.append(getattr(p, 'size', 0))
             
         if algorithm == "FIFO":
             self.memory_manager.set_strategy(FIFOStrategy())
@@ -41,8 +48,16 @@ class SimulationEngine:
             self.memory_manager.set_strategy(LRUStrategy())
         elif algorithm == "Optimal":
             self.memory_manager.set_strategy(OptimalStrategy())
+        elif algorithm == "Best Fit":
+            self.memory_manager.set_strategy(BestFitStrategy())
+        elif algorithm == "Worst Fit":
+            self.memory_manager.set_strategy(WorstFitStrategy())
+        elif algorithm == "First Fit":
+            self.memory_manager.set_strategy(FirstFitStrategy())
+        elif algorithm == "Relocatable":
+            self.memory_manager.set_strategy(RelocatablePartitionStrategy())
             
-        return self.memory_manager.run(all_refs, frames)
+        return self.memory_manager.run(all_refs, frames, process_sizes)
 
     def run_disk_simulation(self, algorithm: str, start_pos: int = 50):
         # Concatenar todas las peticiones

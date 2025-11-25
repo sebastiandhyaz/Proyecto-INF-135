@@ -10,6 +10,7 @@ class Process:
     priority: int
     memory_refs: List[int]  # Secuencia de referencias a páginas
     disk_requests: List[int] # Lista de cilindros solicitados
+    size: int = 0 # Tamaño del proceso en MB (para algoritmos de partición)
 
     def to_dict(self):
         return asdict(self)
