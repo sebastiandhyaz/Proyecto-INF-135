@@ -19,209 +19,225 @@ except ImportError:
 # Configuración de la página
 st.set_page_config(page_title="OS Simulator", layout="wide", page_icon="🖥️")
 
-# Estilos CSS para hacer la interfaz más compacta y simétrica (Flexbox)
+# Importar FontAwesome
+st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">', unsafe_allow_html=True)
+
+# Estilos CSS: Tema Azul Oscuro Profesional (Dashboard)
 st.markdown("""
 <style>
-    /* Contenedor principal centrado y con ancho máximo controlado */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    /* Títulos centrados */
-    h1, h2, h3, h4, h5 {
-        text-align: center !important;
-    }
-    
-    /* Botones con tamaño uniforme y centrados */
-    .stButton button {
-        width: 100%;
-        /* height: 45px;  <-- Eliminamos altura fija que causaba desproporción */
-        margin-top: 28px; /* Ajuste para alinear con los inputs que tienen label arriba */
-        border-radius: 8px;
-        font-weight: bold;
-    }
-    
-    /* Métricas centradas usando Flexbox */
-    div[data-testid="stMetric"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: #262730; /* Fondo sutil para métricas */
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    div[data-testid="stMetricValue"] {
-        font-size: 1.5rem !important;
-    }
-    div[data-testid="stMetricLabel"] {
-        font-size: 1rem !important;
+    /* --- TEMA GENERAL --- */
+    .stApp {
+        background-color: #0f172a; /* Slate 900 */
+        color: #f1f5f9; /* Slate 100 */
+        font-family: 'Inter', sans-serif;
     }
 
-    /* Ajuste de columnas para alineación vertical */
-    div[data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #1e293b; /* Slate 800 */
+        border-right: 1px solid #334155;
+    }
+
+    /* Títulos */
+    h1, h2, h3 {
+        color: #60a5fa !important; /* Blue 400 */
+        font-weight: 700;
+    }
+    
+    h4, h5, h6 {
+        color: #94a3b8 !important; /* Slate 400 */
+    }
+
+    /* Tarjetas / Contenedores */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #38bdf8 !important; /* Sky 400 */
+    }
+
+    /* Botones */
+    .stButton button {
+        background-color: #2563eb; /* Blue 600 */
+        color: white;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    
+    .stButton button:hover {
+        background-color: #1d4ed8; /* Blue 700 */
+        color: white;
+    }
+
+    /* Inputs */
+    .stSelectbox > div > div, .stNumberInput > div > div {
+        background-color: #1e293b;
+        color: white;
+        border-radius: 6px;
+        border: 1px solid #475569;
+    }
+
+    /* Iconos FontAwesome grandes */
+    .fa-icon-header {
+        font-size: 2rem;
+        color: #60a5fa;
+        margin-right: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 def main():
-    st.title("🖥️ Simulador de Sistema Operativo")
-
-    # Inicializar el motor en session_state
+    # Inicializar el motor
     if 'engine' not in st.session_state:
         st.session_state.engine = SimulationEngine()
     if 'data_loaded' not in st.session_state:
         st.session_state.data_loaded = False
 
-    # Pestañas principales (Imitando la imagen de referencia)
-    tab_io, tab_cpu, tab_mem, tab_disk, tab_help = st.tabs(["Mezcla/IO", "CPU", "Memoria", "Disco", "Ayuda"])
+    # --- BARRA LATERAL DE NAVEGACIÓN (Sin Emojis) ---
+    with st.sidebar:
+        st.markdown("## <i class='fa-solid fa-server'></i> OS SIMULATOR", unsafe_allow_html=True)
+        st.markdown("---")
+        
+        # Menú de navegación
+        selected_page = st.radio(
+            "NAVEGACIÓN", 
+            ["DASHBOARD / IO", "CPU MONITOR", "MEMORY MANAGER", "DISK CONTROLLER", "HELP"],
+            label_visibility="collapsed"
+        )
+        
+        st.markdown("---")
+        st.info("Sistema v2.0 - Stable Build")
 
-    # --- PESTAÑA 1: MEZCLA / IO (Generación de Datos) ---
-    with tab_io:
-        st.markdown("#### Generar mezcla de trabajos")
+    # --- PÁGINA 1: DASHBOARD / IO ---
+    if selected_page == "DASHBOARD / IO":
+        st.markdown("## <i class='fa-solid fa-database fa-icon-header'></i> GENERACIÓN DE CARGA", unsafe_allow_html=True)
         
-        # Fila 1: Inputs centrados
-        c_input1, c_input2 = st.columns(2)
-        with c_input1:
-            num_procs = st.number_input("# Procesos:", min_value=10, value=1000, step=10)
-        with c_input2:
-            seed_val = st.number_input("Semilla (Seed):", value=135)
+        col1, col2 = st.columns([1, 2])
         
-        st.write("") # Espacio
-        
-        # Fila 2: Botones de acción centrados
-        c_btn1, c_btn2 = st.columns(2)
-        with c_btn1:
-            if st.button("Generar Datos Nuevos", type="primary"):
+        with col1:
+            st.markdown("### Configuración")
+            num_procs = st.number_input("Cantidad de Procesos", min_value=10, value=1000, step=10)
+            seed_val = st.number_input("Semilla (Seed)", value=135)
+            
+            st.write("")
+            if st.button("GENERAR DATOS NUEVOS", type="primary"):
                 generate_data(num_processes=num_procs, seed=seed_val)
                 st.session_state.engine.load_data("process_data.json")
                 st.session_state.data_loaded = True
-                st.success(f"Generados {num_procs} procesos (Seed: {seed_val})")
-        
-        with c_btn2:
-            if st.button("Cargar JSON Existente"):
+                st.success(f"Datos generados: {num_procs} procesos")
+
+            if st.button("CARGAR DATOS EXISTENTES"):
                 if os.path.exists("process_data.json"):
                     st.session_state.engine.load_data("process_data.json")
                     st.session_state.data_loaded = True
-                    st.success("Datos cargados correctamente.")
+                    st.success("Datos cargados correctamente")
                 else:
-                    st.error("No se encontró process_data.json")
+                    st.error("No se encontró el archivo")
 
-        st.divider()
-        st.markdown("#### Exportar Datos")
-        # Botones de exportación simétricos
-        c1, c2, c3 = st.columns(3)
-        with c1: st.button("Exportar Procesos (CSV)")
-        with c2: st.button("Exportar Memoria (CSV)")
-        with c3: st.button("Exportar Disco (CSV)")
+        with col2:
+            st.markdown("### Estado del Sistema")
+            if st.session_state.data_loaded:
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Procesos Cargados", len(st.session_state.engine.processes))
+                m2.metric("Estado", "LISTO", delta="OK")
+                m3.metric("Memoria Total", "1024 MB")
+                
+                st.markdown("#### Exportar Datos")
+                c1, c2, c3 = st.columns(3)
+                c1.button("CSV Procesos")
+                c2.button("CSV Memoria")
+                c3.button("CSV Disco")
+            else:
+                st.info("Esperando generación de datos...")
 
-    # --- PESTAÑA 2: CPU ---
-    with tab_cpu:
+    # --- PÁGINA 2: CPU ---
+    elif selected_page == "CPU MONITOR":
+        st.markdown("## <i class='fa-solid fa-microchip fa-icon-header'></i> PLANIFICADOR DE CPU", unsafe_allow_html=True)
+        
         if not st.session_state.data_loaded:
-            st.warning("⚠️ Primero genera los datos en la pestaña 'Mezcla/IO'")
+            st.warning("⚠️ Por favor genere los datos en el Dashboard primero.")
         else:
-            st.markdown("#### Planificación de CPU")
-            
-            # Controles simétricos [1, 1, 1]
-            c_algo, c_quantum, c_exec = st.columns([1, 1, 1])
-            with c_algo:
-                cpu_algo = st.selectbox("Algoritmo CPU", ["FCFS", "Round Robin", "SJF", "Prioridad"])
-            with c_quantum:
+            # Panel de Control
+            c1, c2, c3 = st.columns([2, 1, 1])
+            with c1:
+                cpu_algo = st.selectbox("Algoritmo de Planificación", ["FCFS", "Round Robin", "SJF", "Prioridad"])
+            with c2:
                 quantum = st.number_input("Quantum (RR)", value=2, min_value=1)
-            with c_exec:
-                # st.write("") # Eliminamos espaciadores manuales ya que usamos CSS margin-top
-                # st.write("")
-                run_cpu = st.button("Ejecutar CPU", type="primary")
+            with c3:
+                st.write("")
+                st.write("")
+                run_cpu = st.button("EJECUTAR", type="primary")
 
             if run_cpu:
                 timeline, avg_wait, avg_turn = st.session_state.engine.run_cpu_simulation(cpu_algo, quantum)
                 
-                st.divider()
-                # Métricas centradas
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Espera Promedio", f"{avg_wait:.2f}")
-                m2.metric("Retorno Promedio", f"{avg_turn:.2f}")
-                m3.metric("Procesos", len(st.session_state.engine.processes))
+                st.markdown("---")
+                # Métricas
+                kpi1, kpi2, kpi3 = st.columns(3)
+                kpi1.metric("Tiempo Espera Promedio", f"{avg_wait:.2f} ms")
+                kpi2.metric("Tiempo Retorno Promedio", f"{avg_turn:.2f} ms")
+                kpi3.metric("Throughput", f"{len(timeline)/100:.2f} p/s")
                 
-                st.divider()
+                st.markdown("---")
                 
-                # Layout Simétrico: Gráfica | Tabla [1, 1]
-                col_graph, col_table = st.columns([1, 1])
+                # Gráfica y Tabla
+                g_col, t_col = st.columns([1, 1])
                 
-                with col_graph:
-                    st.markdown("##### Diagrama de Gantt (Top 30)")
+                with g_col:
+                    st.markdown("#### Diagrama de Gantt")
                     if timeline:
                         df_timeline = pd.DataFrame(timeline)
                         df_view = df_timeline.head(30)
                         
-                        dynamic_height = max(5, len(df_view) * 0.3)
+                        plt.style.use('default') # Fondo blanco solicitado
+                        fig, ax = plt.subplots(figsize=(10, 6))
                         
-                        fig, ax = plt.subplots(figsize=(8, dynamic_height)) # Ajuste de ancho
                         for i, row in df_view.iterrows():
-                            ax.barh(y=f"P{row['pid']}", width=row['end']-row['start'], left=row['start'], color='#4CAF50')
+                            ax.barh(y=f"P{row['pid']}", width=row['end']-row['start'], left=row['start'], color='#3b82f6')
                         
                         ax.set_xlabel("Tiempo")
                         ax.set_ylabel("Proceso")
-                        ax.tick_params(axis='y', labelsize=8)
+                        ax.grid(True, alpha=0.3)
                         st.pyplot(fig)
                 
-                with col_table:
-                    st.markdown("##### Tabla de Ejecución")
+                with t_col:
+                    st.markdown("#### Tabla de Procesos")
                     if timeline:
-                        st.dataframe(df_timeline, height=400, hide_index=True, use_container_width=True)
+                        st.dataframe(df_timeline, height=400, use_container_width=True)
 
-    # --- PESTAÑA 3: MEMORIA ---
-    with tab_mem:
+    # --- PÁGINA 3: MEMORIA ---
+    elif selected_page == "MEMORY MANAGER":
+        st.markdown("## <i class='fa-solid fa-memory fa-icon-header'></i> GESTIÓN DE MEMORIA", unsafe_allow_html=True)
+        
         if not st.session_state.data_loaded:
-            st.warning("⚠️ Primero genera los datos en la pestaña 'Mezcla/IO'")
+            st.warning("⚠️ Por favor genere los datos en el Dashboard primero.")
         else:
-            st.markdown("#### Gestión de Memoria")
-            
-            # Layout simétrico [1, 1, 1]
-            c_mem_algo, c_mem_frames, c_mem_exec = st.columns([1, 1, 1])
-            
-            with c_mem_algo:
-                mem_algo = st.selectbox(
-                    "Algoritmo de Memoria", 
-                    [
-                        "FIFO (Paginación)", 
-                        "LRU (Paginación)", 
-                        "Óptimo (Paginación)", 
-                        "Best Fit (Bloques)", 
-                        "Worst Fit (Bloques)", 
-                        "First Fit (Bloques)", 
-                        "Partición Reubicable"
-                    ]
-                )
-            
-            with c_mem_frames:
-                frames = st.number_input("Marcos / Bloques:", value=4, min_value=1)
-                
-            with c_mem_exec:
-                # st.write("") # Eliminamos espaciadores manuales
-                # st.write("")
-                run_mem = st.button("Ejecutar Memoria", type="primary")
+            c1, c2, c3 = st.columns([2, 1, 1])
+            with c1:
+                mem_algo = st.selectbox("Estrategia de Asignación", 
+                    ["FIFO (Paginación)", "LRU (Paginación)", "Óptimo (Paginación)", 
+                     "Best Fit (Bloques)", "Worst Fit (Bloques)", "First Fit (Bloques)", "Partición Reubicable"])
+            with c2:
+                frames = st.number_input("Marcos / Bloques", value=4, min_value=1)
+            with c3:
+                st.write("")
+                st.write("")
+                run_mem = st.button("SIMULAR", type="primary")
 
             if run_mem:
-                # Mapear nombre del selector al nombre interno del motor
                 algo_map = {
-                    "FIFO (Paginación)": "FIFO",
-                    "LRU (Paginación)": "LRU",
-                    "Óptimo (Paginación)": "Optimal",
-                    "Best Fit (Bloques)": "Best Fit",
-                    "Worst Fit (Bloques)": "Worst Fit",
-                    "First Fit (Bloques)": "First Fit",
-                    "Partición Reubicable": "Relocatable"
+                    "FIFO (Paginación)": "FIFO", "LRU (Paginación)": "LRU", "Óptimo (Paginación)": "Optimal",
+                    "Best Fit (Bloques)": "Best Fit", "Worst Fit (Bloques)": "Worst Fit",
+                    "First Fit (Bloques)": "First Fit", "Partición Reubicable": "Relocatable"
                 }
-                
-                internal_name = algo_map.get(mem_algo, "FIFO") # Fallback seguro
+                internal_name = algo_map.get(mem_algo, "FIFO")
                 res_mem = st.session_state.engine.run_memory_simulation(internal_name, frames)
                 
                 if res_mem:
@@ -229,121 +245,111 @@ def main():
                     total = faults + hits
                     ratio = (hits / total * 100) if total > 0 else 0
                     
-                    st.divider()
-                    st.markdown(f"##### Resultados: {mem_algo}")
+                    st.markdown("---")
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("Fallos de Página", faults, delta_color="inverse")
+                    m2.metric("Aciertos (Hits)", hits)
+                    m3.metric("Eficiencia", f"{ratio:.2f}%")
+                    st.markdown("---")
                     
-                    # Métricas centradas
-                    cm1, cm2, cm3 = st.columns(3)
-                    cm1.metric("Fallos / No Asignados", faults)
-                    cm2.metric("Aciertos / Asignados", hits)
-                    cm3.metric("Ratio Éxito", f"{ratio:.2f}%")
-                    
-                    st.divider()
-                    
-                    # Layout Simétrico: Gráfica | Tabla [1, 1]
-                    col_g_mem, col_t_mem = st.columns([1, 1])
-                    
-                    with col_g_mem:
-                        st.markdown("###### Evolución de Fallos")
-                        # Graficar historial de fallos acumulados
+                    g_col, t_col = st.columns([1, 1])
+                    with g_col:
+                        st.markdown("#### Historial de Fallos")
                         step = max(1, len(history) // 200)
                         sampled_hist = history[::step]
                         
-                        fig_m, ax_m = plt.subplots(figsize=(8, 4))
-                        ax_m.plot(range(0, len(history), step), sampled_hist, color='#2196F3', linewidth=2)
-                        ax_m.set_xlabel("Eventos")
-                        ax_m.set_ylabel("Fallos Acumulados")
-                        ax_m.grid(True, alpha=0.3)
-                        st.pyplot(fig_m)
+                        plt.style.use('default')
+                        fig, ax = plt.subplots(figsize=(10, 5))
+                        ax.plot(range(0, len(history), step), sampled_hist, color='#ef4444', linewidth=2)
+                        ax.set_xlabel("Tiempo")
+                        ax.set_ylabel("Fallos Acumulados")
+                        ax.grid(True, alpha=0.3)
+                        st.pyplot(fig)
                         
-                    with col_t_mem:
-                        st.markdown("###### Resumen de Rendimiento")
+                    with t_col:
+                        st.markdown("#### Estadísticas")
                         df_mem = pd.DataFrame({
-                            "Métrica": ["Total Eventos", "Fallos", "Éxitos", "Ratio Éxito", "Ratio Fallo"],
-                            "Valor": [str(total), str(faults), str(hits), f"{ratio:.2f}%", f"{(100-ratio):.2f}%"]
+                            "Métrica": ["Total Accesos", "Fallos", "Aciertos", "Ratio"],
+                            "Valor": [total, faults, hits, f"{ratio:.2f}%"]
                         })
-                        st.dataframe(df_mem, hide_index=True, use_container_width=True)
+                        st.dataframe(df_mem, use_container_width=True)
 
-    # --- PESTAÑA 4: DISCO ---
-    with tab_disk:
+    # --- PÁGINA 4: DISCO ---
+    elif selected_page == "DISK CONTROLLER":
+        st.markdown("## <i class='fa-solid fa-hard-drive fa-icon-header'></i> CONTROLADOR DE DISCO", unsafe_allow_html=True)
+        
         if not st.session_state.data_loaded:
-            st.warning("⚠️ Primero genera los datos en la pestaña 'Mezcla/IO'")
+            st.warning("⚠️ Por favor genere los datos en el Dashboard primero.")
         else:
-            st.markdown("#### Planificación de Disco")
-            
-            # Layout simétrico [1, 1, 1]
-            c_disk_algo, c_disk_start, c_disk_exec = st.columns([1, 1, 1])
-            
-            with c_disk_algo:
+            c1, c2, c3 = st.columns([2, 1, 1])
+            with c1:
                 disk_algo = st.selectbox("Algoritmo de Disco", ["FCFS / FIFO", "SSTF", "SCAN"])
-            
-            with c_disk_start:
-                start_pos = st.number_input("Cabezal inicial:", value=50, min_value=0, max_value=199)
-                
-            with c_disk_exec:
-                # st.write("") # Eliminamos espaciadores manuales
-                # st.write("")
-                run_disk = st.button("Ejecutar Disco", type="primary")
+            with c2:
+                start_pos = st.number_input("Posición Inicial Cabezal", value=50, min_value=0, max_value=199)
+            with c3:
+                st.write("")
+                st.write("")
+                run_disk = st.button("EJECUTAR", type="primary")
 
             if run_disk:
-                # Mapear nombre
-                disk_map = {
-                    "FCFS / FIFO": "FCFS",
-                    "SSTF": "SSTF",
-                    "SCAN": "SCAN"
-                }
+                disk_map = {"FCFS / FIFO": "FCFS", "SSTF": "SSTF", "SCAN": "SCAN"}
                 internal_disk_name = disk_map.get(disk_algo, "FCFS")
-                
                 res_disk = st.session_state.engine.run_disk_simulation(internal_disk_name, start_pos)
 
                 if res_disk:
                     seek_time, sequence = res_disk
                     
-                    st.divider()
-                    st.markdown(f"##### Resultados: {disk_algo}")
+                    st.markdown("---")
+                    c_res1, c_res2 = st.columns([1, 2])
+                    with c_res1:
+                        st.metric("Desplazamiento Total", f"{seek_time}", "cilindros")
                     
-                    # Métrica centrada (usando columnas para centrar una sola métrica)
-                    dm1, dm2, dm3 = st.columns([1, 2, 1])
-                    with dm2:
-                        st.metric("Total Movimientos (Seek Time)", f"{seek_time} cilindros")
+                    st.markdown("---")
                     
-                    st.divider()
-                    
-                    # Layout Simétrico: Gráfica | Tabla [1, 1]
-                    col_g_disk, col_t_disk = st.columns([1, 1])
-                    
-                    with col_g_disk:
-                        st.markdown("###### Secuencia de Atención (Top 50)")
+                    g_col, t_col = st.columns([1, 1])
+                    with g_col:
+                        st.markdown("#### Secuencia de Acceso")
                         if sequence:
-                            fig_d, ax_d = plt.subplots(figsize=(8, 5))
-                            subset = sequence[:50] # Solo primeros 50
-                            ax_d.plot(subset, range(len(subset)), marker='o', linestyle='-', markersize=6, color='#FF5722')
-                            ax_d.set_ylabel("Secuencia (Paso)")
-                            ax_d.set_xlabel("Cilindro")
-                            ax_d.invert_yaxis()
-                            ax_d.grid(True, alpha=0.3)
-                            st.pyplot(fig_d)
-                    
-                    with col_t_disk:
-                        st.markdown("###### Tabla de Movimientos")
+                            plt.style.use('default')
+                            fig, ax = plt.subplots(figsize=(10, 6))
+                            subset = sequence[:50]
+                            ax.plot(subset, range(len(subset)), marker='o', linestyle='-', color='#10b981')
+                            ax.set_xlabel("Cilindro")
+                            ax.set_ylabel("Secuencia")
+                            ax.invert_yaxis()
+                            ax.grid(True, alpha=0.3)
+                            st.pyplot(fig)
+                            
+                    with t_col:
+                        st.markdown("#### Tabla de Movimientos")
                         if sequence:
-                            # Calcular distancias paso a paso para la tabla
                             diffs = [0] + [abs(sequence[i] - sequence[i-1]) for i in range(1, len(sequence))]
-                            df_disk = pd.DataFrame({
-                                "Paso": range(len(sequence)),
-                                "Cilindro": sequence,
-                                "Distancia": diffs
-                            })
-                            st.dataframe(df_disk, height=400, hide_index=True, use_container_width=True)
+                            df_disk = pd.DataFrame({"Paso": range(len(sequence)), "Cilindro": sequence, "Distancia": diffs})
+                            st.dataframe(df_disk, height=400, use_container_width=True)
 
-    # --- PESTAÑA 5: AYUDA ---
-    with tab_help:
+    # --- PÁGINA 5: AYUDA ---
+    elif selected_page == "HELP":
+        st.markdown("## <i class='fa-solid fa-circle-question fa-icon-header'></i> AYUDA Y DOCUMENTACIÓN", unsafe_allow_html=True)
+        st.info("Guía rápida de uso del simulador.")
+        
         st.markdown("""
-        ### Ayuda del Simulador
-        *   **Mezcla/IO:** Genera los datos aleatorios. Usa 'Seed' para repetir el mismo experimento.
-        *   **CPU:** Compara FCFS, RR y SJF. Ajusta el Quantum para RR.
-        *   **Memoria:** Simula paginación. Cambia los 'Marcos disponibles' para ver cómo afectan los fallos (Anomalía de Belady).
-        *   **Disco:** Simula el movimiento del brazo mecánico.
+        ### Módulos del Sistema
+        
+        1.  **Dashboard / IO**:
+            *   Genera la carga de trabajo inicial.
+            *   Define el número de procesos y la semilla aleatoria.
+            
+        2.  **CPU Monitor**:
+            *   Simula la planificación de procesos.
+            *   Algoritmos: FCFS (First Come First Served), Round Robin, SJF (Shortest Job First).
+            
+        3.  **Memory Manager**:
+            *   Simula la asignación de memoria y paginación.
+            *   Visualiza fallos de página y eficiencia.
+            
+        4.  **Disk Controller**:
+            *   Simula el movimiento del brazo del disco duro.
+            *   Algoritmos: FCFS, SSTF (Shortest Seek Time First), SCAN (Elevator).
         """)
 
 if __name__ == "__main__":

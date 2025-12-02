@@ -1,0 +1,128 @@
+INFORME EJECUTIVO: SIMULADOR DE SISTEMA OPERATIVO
+===================================================
+
+1. INTRODUCCIÓN Y OBJETIVO
+--------------------------
+Este proyecto consiste en el desarrollo de un Simulador de Sistema Operativo completo, diseñado para visualizar y analizar el comportamiento de los algoritmos fundamentales de gestión de recursos en un entorno computacional. El objetivo principal es proporcionar una herramienta educativa e interactiva que permita a estudiantes y profesionales comprender cómo un sistema operativo administra la CPU, la Memoria y el Disco Duro bajo diferentes cargas de trabajo.
+
+El simulador permite generar cargas de trabajo sintéticas (procesos) y someterlas a diferentes estrategias de planificación, ofreciendo métricas de rendimiento y visualizaciones gráficas en tiempo real.
+
+2. ARQUITECTURA DEL SISTEMA
+---------------------------
+El sistema está construido utilizando Python como lenguaje base y Streamlit para la interfaz gráfica. La arquitectura sigue el patrón de diseño "Strategy" (Estrategia), lo que permite intercambiar algoritmos de planificación en tiempo real sin modificar el núcleo del simulador.
+
+Componentes Principales:
+- Interfaz de Usuario (Frontend): Desarrollada en Streamlit, ofrece un diseño moderno, simétrico y responsivo con efectos 3D y tema oscuro (Navy Blue).
+- Motor de Simulación (Backend): Orquesta la ejecución de los procesos a través de los subsistemas.
+- Modelos de Datos: Estructuras que representan Procesos, Páginas de Memoria y Peticiones de Disco.
+
+3. MÓDULOS DEL SIMULADOR
+------------------------
+
+3.1. GENERACIÓN DE DATOS (MEZCLA DE TRABAJOS)
+---------------------------------------------
+Este módulo es el punto de partida. Permite crear un conjunto de procesos simulados con características aleatorias pero controladas mediante una "semilla" (seed) para garantizar la reproducibilidad de los experimentos.
+
+- Funcionalidad: Genera N procesos (por defecto 1000).
+- Atributos por Proceso:
+  - PID: Identificador único.
+  - Tiempo de Llegada (Arrival Time): Distribución aleatoria.
+  - Ráfaga de CPU (Burst Time): Tiempo necesario de procesamiento.
+  - Prioridad: Valor numérico para algoritmos de prioridad.
+  - Tamaño (Size): Memoria requerida (para algoritmos de bloques).
+  - Referencias de Memoria: Secuencia de páginas a las que accede.
+  - Peticiones de Disco: Cilindros del disco que necesita leer/escribir.
+
+3.2. PLANIFICACIÓN DE CPU (SCHEDULING)
+--------------------------------------
+Simula cómo el sistema operativo decide qué proceso utiliza el procesador en cada momento.
+
+Algoritmos Implementados:
+1. FCFS (First-Come, First-Served): Atiende los procesos en estricto orden de llegada. Es simple pero puede sufrir del "efecto convoy".
+2. SJF (Shortest Job First): Prioriza los procesos con la ráfaga de CPU más corta. Minimiza el tiempo de espera promedio pero puede causar inanición a procesos largos.
+3. Round Robin (RR): Asigna un tiempo fijo (Quantum) a cada proceso de forma cíclica. Es ideal para sistemas de tiempo compartido. El usuario puede ajustar el Quantum.
+4. Prioridad: Atiende primero a los procesos con mayor prioridad asignada.
+
+Métricas Generadas:
+- Tiempo de Espera Promedio.
+- Tiempo de Retorno (Turnaround) Promedio.
+- Diagrama de Gantt: Visualización temporal de la ejecución.
+
+3.3. GESTIÓN DE MEMORIA
+-----------------------
+Simula la asignación de memoria RAM a los procesos, manejando tanto paginación como segmentación/bloques.
+
+Algoritmos Implementados:
+1. FIFO (First-In, First-Out): Reemplaza la página que lleva más tiempo en memoria. Sufre de la Anomalía de Belady.
+2. LRU (Least Recently Used): Reemplaza la página que no se ha usado por más tiempo. Suele tener buen rendimiento.
+3. Óptimo: Algoritmo teórico que reemplaza la página que tardará más en volver a usarse. Sirve como base comparativa.
+4. Best Fit (Mejor Ajuste): Busca el bloque de memoria libre que mejor se ajusta al tamaño del proceso (menor desperdicio).
+5. Worst Fit (Peor Ajuste): Asigna el bloque más grande disponible.
+6. First Fit (Primer Ajuste): Asigna el primer bloque libre que sea suficiente.
+7. Partición Reubicable: Simula la compactación de memoria para unir huecos libres.
+
+Métricas Generadas:
+- Fallos de Página (Page Faults) / Fallos de Asignación.
+- Ratio de Éxito (Hits).
+- Gráfica de evolución de fallos en el tiempo.
+
+3.4. PLANIFICACIÓN DE DISCO
+---------------------------
+Simula el movimiento del brazo mecánico del disco duro para atender peticiones de lectura/escritura en diferentes cilindros (pistas).
+
+Algoritmos Implementados:
+1. FCFS (First-Come, First-Served): Atiende peticiones en orden de llegada. Puede implicar mucho movimiento del cabezal.
+2. SSTF (Shortest Seek Time First): Mueve el cabezal a la petición más cercana a la posición actual. Reduce el movimiento pero puede causar inanición a peticiones lejanas.
+3. SCAN (Algoritmo del Elevador): El cabezal se mueve en una dirección atendiendo todo a su paso hasta el final, y luego rebota.
+
+Métricas Generadas:
+- Seek Time Total: Distancia total recorrida por el cabezal (en cilindros).
+- Gráfica de Secuencia de Atención.
+
+4. INTERFAZ DE USUARIO (UI/UX)
+------------------------------
+La interfaz ha sido diseñada con un enfoque profesional y moderno:
+- Tema Visual: "Navy Blue" (Azul Marino) con acentos en cian neón y transparencias RGBA.
+- Diseño 3D Neumórfico: Botones y paneles con efectos de luces y sombras para simular profundidad y relieve.
+- Simetría y Flexbox: Distribución equilibrada de elementos en pantalla, asegurando que controles y resultados estén perfectamente alineados.
+- Iconografía: Integración de FontAwesome para iconos vectoriales de alta calidad.
+- Interactividad: Gráficos dinámicos generados con Matplotlib y tablas de datos explorables.
+
+5. CONCLUSIÓN
+-------------
+Este simulador cumple con el objetivo de modelar los componentes críticos de un SO. Permite observar empíricamente diferencias teóricas, como la eficiencia del SSTF sobre FCFS en disco, o el comportamiento de LRU vs FIFO en memoria. Es una herramienta robusta para la experimentación y el aprendizaje de conceptos de Sistemas Operativos.
+
+6. GUÍA DE USUARIO
+------------------
+A continuación se detallan los pasos para operar el simulador correctamente:
+
+PASO 1: INICIO Y GENERACIÓN DE DATOS (Pestaña "DASHBOARD / IO")
+   - Al abrir la aplicación, diríjase a la sección "DASHBOARD / IO" en el menú lateral.
+   - En "Configuración", ingrese la "Cantidad de Procesos" deseada (ej. 1000) y una "Semilla" (Seed) numérica.
+   - Haga clic en el botón "GENERAR DATOS NUEVOS".
+   - Verifique que el indicador de "Estado" cambie a "LISTO" y aparezca el número de procesos cargados.
+   - Nota: Sin este paso, los demás módulos no tendrán datos para trabajar.
+
+PASO 2: SIMULACIÓN DE CPU (Pestaña "CPU MONITOR")
+   - Seleccione "CPU MONITOR" en el menú lateral.
+   - Elija un "Algoritmo de Planificación" (FCFS, Round Robin, SJF, Prioridad).
+   - Si elige Round Robin, ajuste el valor del "Quantum".
+   - Presione "EJECUTAR".
+   - Analice las métricas de tiempo y el Diagrama de Gantt resultante.
+
+PASO 3: SIMULACIÓN DE MEMORIA (Pestaña "MEMORY MANAGER")
+   - Seleccione "MEMORY MANAGER" en el menú lateral.
+   - Elija una "Estrategia de Asignación" (ej. LRU, Best Fit).
+   - Defina la cantidad de "Marcos / Bloques" disponibles (recursos del sistema).
+   - Presione "SIMULAR".
+   - Observe la gráfica de "Historial de Fallos" para evaluar la eficiencia de la estrategia.
+
+PASO 4: SIMULACIÓN DE DISCO (Pestaña "DISK CONTROLLER")
+   - Seleccione "DISK CONTROLLER" en el menú lateral.
+   - Elija el "Algoritmo de Disco" (FCFS, SSTF, SCAN).
+   - Establezca la "Posición Inicial Cabezal" (0-199).
+   - Presione "EJECUTAR".
+   - El sistema calculará el "Desplazamiento Total" del brazo mecánico, indicando la eficiencia del movimiento.
+
+PASO 5: EXPORTACIÓN
+   - En la pestaña "DASHBOARD / IO", utilice los botones de exportación para descargar los resultados en formato CSV si desea realizar análisis externos.
